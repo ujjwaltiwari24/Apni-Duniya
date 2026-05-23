@@ -309,19 +309,17 @@ export default function HomePage() {
                 currentScene={
                   currentScene
                 }
-                setCurrentScene={(
-                  scene
-                ) => {
+                setCurrentScene={(scene: any) => {
 
-                  setCurrentScene(
-                    scene
-                  );
+  setCurrentScene(
+    scene
+  );
 
-                  setSidebarOpen(
-                    false
-                  );
+  setSidebarOpen(
+    false
+  );
 
-                }}
+}}
                 user={user}
               />
 
