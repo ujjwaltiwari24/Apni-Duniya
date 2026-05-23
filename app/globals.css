@@ -1,11 +1,30 @@
 @import "tailwindcss";
 
+* {
+  box-sizing: border-box;
+}
+
 html,
 body {
   margin: 0;
   padding: 0;
+
+  width: 100%;
+  max-width: 100%;
+
+  overflow-x: hidden;
+
   background: black;
+
+  scroll-behavior: smooth;
 }
+
+/* Root */
+#__next {
+  width: 100%;
+  overflow-x: hidden;
+}
+
 /* Smooth Scrollbar */
 .custom-scroll::-webkit-scrollbar {
   width: 6px;
@@ -23,34 +42,66 @@ body {
 .custom-scroll::-webkit-scrollbar-thumb:hover {
   background: rgba(255,255,255,0.25);
 }
+
+/* Floating Animation */
 @keyframes float {
 
   0% {
-    transform: translateY(0px) translateX(0px);
+    transform:
+      translateY(0px)
+      translateX(0px);
   }
 
   50% {
-    transform: translateY(-30px) translateX(20px);
+    transform:
+      translateY(-30px)
+      translateX(20px);
   }
 
   100% {
-    transform: translateY(0px) translateX(0px);
+    transform:
+      translateY(0px)
+      translateX(0px);
   }
 
 }
 
+/* Floating Animation 2 */
 @keyframes float2 {
 
   0% {
-    transform: translateY(0px) translateX(0px);
+    transform:
+      translateY(0px)
+      translateX(0px);
   }
 
   50% {
-    transform: translateY(20px) translateX(-20px);
+    transform:
+      translateY(20px)
+      translateX(-20px);
   }
 
   100% {
-    transform: translateY(0px) translateX(0px);
+    transform:
+      translateY(0px)
+      translateX(0px);
   }
 
+}
+
+/* Selection */
+::selection {
+  background: rgba(220,180,120,0.3);
+  color: white;
+}
+
+/* Prevent image dragging */
+img {
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+/* Better Buttons */
+button {
+  outline: none;
 }
