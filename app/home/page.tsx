@@ -23,6 +23,9 @@ import SceneView from "@/components/SceneView";
 
 import { scenes } from "@/data/scenes";
 
+type SceneType =
+  (typeof scenes)[0];
+
 export default function HomePage() {
 
   const router = useRouter();
@@ -43,9 +46,11 @@ export default function HomePage() {
     useState(false);
 
   const [currentScene, setCurrentScene] =
-    useState(scenes[0]);
+    useState<SceneType>(
+      scenes[0]
+    );
 
-  // Detect mobile
+  // Detect Mobile
   useEffect(() => {
 
     const handleResize = () => {
@@ -74,7 +79,7 @@ export default function HomePage() {
 
   }, []);
 
-  // Auth check
+  // Auth
   useEffect(() => {
 
     const unsubscribe =
@@ -107,7 +112,15 @@ export default function HomePage() {
 
       if (sceneRef.current) {
 
-        await sceneRef.current.requestFullscreen();
+        try {
+
+          await sceneRef.current.requestFullscreen();
+
+        } catch (error) {
+
+          console.log(error);
+
+        }
 
       }
 
@@ -120,26 +133,49 @@ export default function HomePage() {
 
       if (document.fullscreenElement) {
 
-        await document.exitFullscreen();
+        try {
+
+          await document.exitFullscreen();
+
+        } catch (error) {
+
+          console.log(error);
+
+        }
 
       }
 
     };
 
+  // Close sidebar on scene change mobile
+  const handleSceneChange = (
+    scene: SceneType
+  ) => {
+
+    setCurrentScene(scene);
+
+    if (isMobile) {
+
+      setSidebarOpen(false);
+
+    }
+
+  };
+
   return (
     <main
       style={{
-        height: "100vh",
+        height: "100dvh",
         width: "100%",
         background: "#000",
-        color: "white",
         overflow: "hidden",
         position: "relative",
         display: "flex",
+        touchAction: "manipulation",
       }}
     >
 
-      {/* Mobile Top Bar */}
+      {/* MOBILE TOPBAR */}
       {
         isMobile &&
         !immersiveMode && (
@@ -147,27 +183,33 @@ export default function HomePage() {
           <div
             style={{
               position: "fixed",
+
               top: 0,
               left: 0,
               right: 0,
 
-              zIndex: 60,
-
               height: 64,
 
+              zIndex: 100,
+
               display: "flex",
+
               alignItems: "center",
+
               justifyContent:
                 "space-between",
 
               padding:
                 "0 16px",
 
+              background:
+                "rgba(0,0,0,0.45)",
+
               backdropFilter:
                 "blur(18px)",
 
-              background:
-                "rgba(0,0,0,0.45)",
+              WebkitBackdropFilter:
+                "blur(18px)",
 
               borderBottom:
                 "1px solid rgba(255,255,255,0.06)",
@@ -177,11 +219,16 @@ export default function HomePage() {
             {/* Logo */}
             <div
               style={{
-                fontSize: 22,
+                fontSize: 24,
                 fontWeight: 700,
 
+                color: "white",
+
                 letterSpacing:
-                  "-0.05em",
+                  "-0.06em",
+
+                fontFamily:
+                  "Inter, sans-serif",
               }}
             >
 
@@ -209,8 +256,8 @@ export default function HomePage() {
               }
 
               style={{
-                width: 42,
-                height: 42,
+                width: 44,
+                height: 44,
 
                 borderRadius: 14,
 
@@ -222,9 +269,11 @@ export default function HomePage() {
 
                 color: "white",
 
-                fontSize: 18,
+                fontSize: 20,
 
                 cursor: "pointer",
+
+                flexShrink: 0,
               }}
             >
 
@@ -237,16 +286,18 @@ export default function HomePage() {
         )
       }
 
-      {/* Desktop Sidebar */}
+      {/* DESKTOP SIDEBAR */}
       {
         !isMobile &&
         !immersiveMode && (
 
           <Sidebar
             scenes={scenes}
-            currentScene={currentScene}
+            currentScene={
+              currentScene
+            }
             setCurrentScene={
-              setCurrentScene
+              handleSceneChange
             }
             user={user}
           />
@@ -254,7 +305,7 @@ export default function HomePage() {
         )
       }
 
-      {/* Mobile Sidebar */}
+      {/* MOBILE SIDEBAR */}
       {
         isMobile &&
         sidebarOpen &&
@@ -272,9 +323,15 @@ export default function HomePage() {
                 inset: 0,
 
                 background:
-                  "rgba(0,0,0,0.45)",
+                  "rgba(0,0,0,0.55)",
 
-                zIndex: 70,
+                backdropFilter:
+                  "blur(6px)",
+
+                WebkitBackdropFilter:
+                  "blur(6px)",
+
+                zIndex: 120,
               }}
             />
 
@@ -287,39 +344,43 @@ export default function HomePage() {
                 left: 0,
                 bottom: 0,
 
-                width: 290,
+                width: "82%",
 
-                zIndex: 80,
+                maxWidth: 300,
+
+                zIndex: 130,
 
                 background:
-                  "rgba(10,10,10,0.92)",
-
-                backdropFilter:
-                  "blur(20px)",
+                  "rgba(10,10,10,0.97)",
 
                 borderRight:
                   "1px solid rgba(255,255,255,0.06)",
 
+                backdropFilter:
+                  "blur(20px)",
+
+                WebkitBackdropFilter:
+                  "blur(20px)",
+
                 overflowY: "auto",
+
+                overflowX: "hidden",
+
+                paddingTop: 12,
               }}
             >
 
               <Sidebar
                 scenes={scenes}
+
                 currentScene={
                   currentScene
                 }
-                setCurrentScene={(scene: any) => {
 
-  setCurrentScene(
-    scene
-  );
+                setCurrentScene={
+                  handleSceneChange
+                }
 
-  setSidebarOpen(
-    false
-  );
-
-}}
                 user={user}
               />
 
@@ -330,12 +391,18 @@ export default function HomePage() {
         )
       }
 
-      {/* Scene Area */}
+      {/* MAIN CONTENT */}
       <div
         style={{
           flex: 1,
-          height: "100vh",
+
           width: "100%",
+
+          height: "100dvh",
+
+          overflow: "hidden",
+
+          position: "relative",
 
           marginTop:
             isMobile &&
@@ -363,6 +430,8 @@ export default function HomePage() {
           exitImmersion={
             exitImmersion
           }
+
+          isMobile={isMobile}
         />
 
       </div>

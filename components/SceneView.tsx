@@ -7,27 +7,49 @@ import {
 } from "react";
 
 interface Props {
+
   currentScene: any;
+
   enterFullscreen: () => void;
+
   sceneRef: any;
+
   immersiveMode: boolean;
+
   exitImmersion: () => void;
+
+  isMobile: boolean;
+
 }
 
 interface Particle {
+
   width: number;
+
   height: number;
+
   top: number;
+
   left: number;
+
   duration: number;
+
 }
 
 export default function SceneView({
+
   currentScene,
+
   enterFullscreen,
+
   sceneRef,
+
   immersiveMode,
+
   exitImmersion,
+
+  isMobile,
+
 }: Props) {
 
   const videoRef =
@@ -54,7 +76,7 @@ export default function SceneView({
   const [particles, setParticles] =
     useState<Particle[]>([]);
 
-  // Scene transitions
+  // Scene transition
   useEffect(() => {
 
     setVisible(false);
@@ -71,18 +93,20 @@ export default function SceneView({
 
   }, [currentScene]);
 
-  // Mouse movement
+  // Mouse effect desktop only
   useEffect(() => {
+
+    if (isMobile) return;
 
     const handleMouseMove = (
       e: MouseEvent
     ) => {
 
       const x =
-        (e.clientX / window.innerWidth - 0.5) * 30;
+        (e.clientX / window.innerWidth - 0.5) * 20;
 
       const y =
-        (e.clientY / window.innerHeight - 0.5) * 30;
+        (e.clientY / window.innerHeight - 0.5) * 20;
 
       setMousePosition({ x, y });
 
@@ -102,13 +126,13 @@ export default function SceneView({
 
     };
 
-  }, []);
+  }, [isMobile]);
 
-  // Generate particles
+  // Particles
   useEffect(() => {
 
     const generatedParticles =
-      [...Array(25)].map(() => ({
+      [...Array(isMobile ? 10 : 25)].map(() => ({
 
         width:
           Math.random() * 4 + 2,
@@ -129,9 +153,9 @@ export default function SceneView({
 
     setParticles(generatedParticles);
 
-  }, []);
+  }, [isMobile]);
 
-  // Live Clock
+  // Clock
   useEffect(() => {
 
     const updateClock = () => {
@@ -162,7 +186,7 @@ export default function SceneView({
 
   }, []);
 
-  // Audio Setup
+  // Audio
   useEffect(() => {
 
     if (audioRef.current) {
@@ -186,7 +210,7 @@ export default function SceneView({
 
   }, [currentScene]);
 
-  // Play / Pause Audio
+  // Toggle music
   const toggleMusic = async () => {
 
     if (!audioRef.current) return;
@@ -215,7 +239,7 @@ export default function SceneView({
 
   };
 
-  // Real Time Category
+  // Time label
   const getRealTimeCategory = () => {
 
     const hour =
@@ -250,14 +274,10 @@ export default function SceneView({
   return (
     <section
       ref={sceneRef}
-      className={`flex-1 relative overflow-hidden flex items-center justify-center transition-all duration-700 ${
-        immersiveMode
-          ? "w-screen"
-          : ""
-      }`}
+      className="relative flex-1 overflow-hidden flex items-center justify-center"
     >
 
-      {/* Background Video */}
+      {/* VIDEO */}
       {
         currentScene.video && (
 
@@ -267,11 +287,13 @@ export default function SceneView({
             muted
             loop
             playsInline
-            className={`absolute inset-0 object-cover transition-all duration-700 ${
-              immersiveMode
-                ? "scale-105 w-full h-full"
-                : "w-full h-full"
-            }`}
+            className="absolute inset-0 w-full h-full object-cover"
+            style={{
+              transform:
+                immersiveMode
+                  ? "scale(1.03)"
+                  : "scale(1)",
+            }}
           >
 
             <source
@@ -284,36 +306,54 @@ export default function SceneView({
         )
       }
 
-      {/* Overlay */}
-      <div className={`absolute inset-0 transition-all duration-700 ${
-        immersiveMode
-          ? "bg-black/35"
-          : "bg-black/45"
-      }`} />
-
-      {/* Ambient Glow */}
+      {/* OVERLAY */}
       <div
-        className="absolute top-[10%] right-[10%] w-[550px] h-[550px] bg-amber-500/10 blur-3xl rounded-full animate-pulse transition-transform duration-300"
+        className="absolute inset-0"
         style={{
-          transform:
-            `translate(${mousePosition.x}px, ${mousePosition.y}px)`
+          background:
+            "linear-gradient(to top, rgba(0,0,0,0.82), rgba(0,0,0,0.32), rgba(0,0,0,0.58))",
         }}
       />
 
-      <div
-        className="absolute bottom-[0%] left-[10%] w-[450px] h-[450px] bg-blue-500/10 blur-3xl rounded-full animate-pulse transition-transform duration-300"
-        style={{
-          transform:
-            `translate(${-mousePosition.x}px, ${-mousePosition.y}px)`
-        }}
-      />
+      {/* GLOW */}
+      {
+        !isMobile && (
 
-      {/* Floating Fog */}
-      <div
-        className="absolute top-[25%] left-[30%] w-[400px] h-[400px] bg-white/[0.03] blur-3xl rounded-full animate-[float_12s_ease-in-out_infinite]"
-      />
+          <>
+            <div
+              className="absolute top-[10%] right-[10%] rounded-full blur-3xl"
+              style={{
+                width: 500,
+                height: 500,
 
-      {/* Particles */}
+                background:
+                  "rgba(245,158,11,0.08)",
+
+                transform:
+                  `translate(${mousePosition.x}px, ${mousePosition.y}px)`,
+              }}
+            />
+
+            <div
+              className="absolute bottom-[0%] left-[10%] rounded-full blur-3xl"
+              style={{
+                width: 420,
+                height: 420,
+
+                background:
+                  "rgba(59,130,246,0.08)",
+
+                transform:
+                  `translate(${-mousePosition.x}px, ${-mousePosition.y}px)`,
+              }}
+            />
+
+          </>
+
+        )
+      }
+
+      {/* PARTICLES */}
       <div className="absolute inset-0 overflow-hidden">
 
         {
@@ -336,32 +376,102 @@ export default function SceneView({
 
       </div>
 
-      {/* Main Content */}
+      {/* CONTENT */}
       <div
-        className={`relative z-10 text-center px-10 max-w-5xl transition-all duration-700 ease-out ${
+        className={`relative z-10 text-center transition-all duration-700 ${
           visible
-            ? "opacity-100 scale-100 blur-0"
-            : "opacity-0 scale-95 blur-md"
+            ? "opacity-100 scale-100"
+            : "opacity-0 scale-95"
         }`}
         style={{
+          padding:
+            isMobile
+              ? "0 18px"
+              : "0 40px",
+
+          maxWidth:
+            isMobile
+              ? 360
+              : 1200,
+
           transform:
-            `translate(${mousePosition.x * 0.2}px, ${mousePosition.y * 0.2}px)`
+            !isMobile
+              ? `translate(${mousePosition.x * 0.2}px, ${mousePosition.y * 0.2}px)`
+              : "none",
         }}
       >
 
-        {/* Smart Time Label */}
+        {/* TIME */}
         {
           shouldShowTime && (
 
-            <div className="mb-8">
+            <div
+              style={{
+                marginBottom:
+                  isMobile
+                    ? 22
+                    : 34,
+              }}
+            >
 
-              <div className="inline-flex items-center gap-3 px-6 py-3 rounded-full bg-white/5 border border-white/10 backdrop-blur-xl text-zinc-200 text-lg shadow-2xl">
+              <div
+                style={{
+                  display:
+                    "inline-flex",
 
-                <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+                  alignItems:
+                    "center",
+
+                  gap: 10,
+
+                  padding:
+                    isMobile
+                      ? "10px 16px"
+                      : "12px 22px",
+
+                  borderRadius: 999,
+
+                  background:
+                    "rgba(255,255,255,0.05)",
+
+                  border:
+                    "1px solid rgba(255,255,255,0.08)",
+
+                  backdropFilter:
+                    "blur(18px)",
+
+                  fontSize:
+                    isMobile
+                      ? 14
+                      : 18,
+
+                  color:
+                    "rgba(255,255,255,0.86)",
+                }}
+              >
+
+                <span
+                  className="animate-pulse"
+                  style={{
+                    width: 8,
+                    height: 8,
+
+                    borderRadius:
+                      "50%",
+
+                    background:
+                      "#4ade80",
+                  }}
+                />
 
                 {time}
 
-                <span className="text-zinc-400">
+                <span
+                  style={{
+                    color:
+                      "rgba(255,255,255,0.45)",
+                  }}
+                >
 
                   • {currentScene.mood} {currentScene.time}
 
@@ -374,48 +484,143 @@ export default function SceneView({
           )
         }
 
-        {/* Emoji */}
-        <div className={`drop-shadow-2xl animate-pulse transition-all duration-700 ${
-          immersiveMode
-            ? "text-[160px]"
-            : "text-[120px]"
-        }`}>
+        {/* EMOJI */}
+        <div
+          style={{
+            fontSize:
+              isMobile
+                ? 74
+                : immersiveMode
+                ? 150
+                : 120,
+
+            marginBottom:
+              isMobile
+                ? 8
+                : 18,
+          }}
+        >
 
           {currentScene.emoji}
 
         </div>
 
-        {/* Title */}
-        <h2 className={`font-semibold tracking-tight leading-[0.95] mb-7 transition-all duration-700 ${
-          immersiveMode
-            ? "text-8xl md:text-9xl"
-            : "text-7xl md:text-8xl"
-        }`}>
+        {/* TITLE */}
+        <h2
+          style={{
+            fontSize:
+              isMobile
+                ? 54
+                : immersiveMode
+                ? 120
+                : 92,
+
+            lineHeight: 0.92,
+
+            fontWeight: 700,
+
+            letterSpacing:
+              "-0.06em",
+
+            marginBottom:
+              isMobile
+                ? 18
+                : 26,
+          }}
+        >
 
           {currentScene.name}
 
         </h2>
 
-        {/* Description */}
-        <p className={`text-zinc-200 leading-relaxed max-w-3xl mx-auto mb-14 transition-all duration-700 ${
-          immersiveMode
-            ? "text-3xl"
-            : "text-2xl"
-        }`}>
+        {/* DESCRIPTION */}
+        <p
+          style={{
+            fontSize:
+              isMobile
+                ? 16
+                : immersiveMode
+                ? 30
+                : 24,
+
+            lineHeight: 1.8,
+
+            color:
+              "rgba(255,255,255,0.76)",
+
+            maxWidth:
+              isMobile
+                ? 320
+                : 760,
+
+            margin:
+              "0 auto",
+
+            marginBottom:
+              isMobile
+                ? 34
+                : 54,
+          }}
+        >
 
           {currentScene.description}
 
         </p>
 
-        {/* Buttons */}
-        <div className="flex justify-center gap-5 flex-wrap">
+        {/* BUTTONS */}
+        <div
+          style={{
+            display: "flex",
+
+            justifyContent:
+              "center",
+
+            gap:
+              isMobile
+                ? 12
+                : 18,
+
+            flexWrap: "wrap",
+          }}
+        >
 
           {
             !immersiveMode && (
 
               <button
-                onClick={enterFullscreen}
-                className="bg-white text-black hover:scale-105 transition-all duration-300 px-9 py-4 rounded-2xl font-medium text-lg"
+                onClick={
+                  enterFullscreen
+                }
+
+                style={{
+                  width:
+                    isMobile
+                      ? "100%"
+                      : 280,
+
+                  maxWidth: 320,
+
+                  padding:
+                    isMobile
+                      ? "16px 18px"
+                      : "18px 24px",
+
+                  borderRadius: 20,
+
+                  background:
+                    "white",
+
+                  color: "black",
+
+                  border: "none",
+
+                  fontWeight: 600,
+
+                  fontSize:
+                    isMobile
+                      ? 15
+                      : 18,
+                }}
               >
 
                 ⛶ Enter World
@@ -427,7 +632,40 @@ export default function SceneView({
 
           <button
             onClick={toggleMusic}
-            className="bg-white/5 border border-white/10 hover:bg-white/10 hover:scale-105 transition-all duration-300 px-9 py-4 rounded-2xl font-medium text-lg backdrop-blur-xl"
+
+            style={{
+              width:
+                isMobile
+                  ? "100%"
+                  : 280,
+
+              maxWidth: 320,
+
+              padding:
+                isMobile
+                  ? "16px 18px"
+                  : "18px 24px",
+
+              borderRadius: 20,
+
+              background:
+                "rgba(255,255,255,0.05)",
+
+              border:
+                "1px solid rgba(255,255,255,0.08)",
+
+              backdropFilter:
+                "blur(18px)",
+
+              color: "white",
+
+              fontWeight: 600,
+
+              fontSize:
+                isMobile
+                  ? 15
+                  : 18,
+            }}
           >
 
             {
@@ -442,8 +680,40 @@ export default function SceneView({
             immersiveMode && (
 
               <button
-                onClick={exitImmersion}
-                className="bg-red-500/20 border border-red-500/30 hover:bg-red-500/30 transition-all duration-300 px-9 py-4 rounded-2xl font-medium text-lg backdrop-blur-xl"
+                onClick={
+                  exitImmersion
+                }
+
+                style={{
+                  width:
+                    isMobile
+                      ? "100%"
+                      : 280,
+
+                  maxWidth: 320,
+
+                  padding:
+                    isMobile
+                      ? "16px 18px"
+                      : "18px 24px",
+
+                  borderRadius: 20,
+
+                  background:
+                    "rgba(239,68,68,0.15)",
+
+                  border:
+                    "1px solid rgba(239,68,68,0.28)",
+
+                  color: "white",
+
+                  fontWeight: 600,
+
+                  fontSize:
+                    isMobile
+                      ? 15
+                      : 18,
+                }}
               >
 
                 ✕ Exit World
@@ -457,8 +727,19 @@ export default function SceneView({
 
       </div>
 
-      {/* Bottom Gradient */}
-      <div className="absolute bottom-0 left-0 right-0 h-[220px] bg-gradient-to-t from-black via-black/50 to-transparent" />
+      {/* BOTTOM GRADIENT */}
+      <div
+        className="absolute bottom-0 left-0 right-0"
+        style={{
+          height:
+            isMobile
+              ? 140
+              : 220,
+
+          background:
+            "linear-gradient(to top, rgba(0,0,0,0.95), transparent)",
+        }}
+      />
 
     </section>
   );
