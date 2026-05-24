@@ -311,33 +311,6 @@ export default function MobileApp({ scenes, currentScene, setCurrentScene, enter
             </div>
 
             {/* Now playing */}
-            <Card style={{ display: "flex", alignItems: "center", gap: 12, padding: "13px 14px" }}>
-              <div style={{
-                width: 38, height: 38, borderRadius: 10, flexShrink: 0,
-                background: "rgba(236,72,153,0.12)", border: "1px solid rgba(236,72,153,0.2)",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                color: "rgba(236,72,153,0.8)",
-              }}>
-                <Icon d={ICONS.music} size={17} />
-              </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 13, fontWeight: 500, color: C.text, marginBottom: 2 }}>
-                  Calm Piano & Rain
-                </div>
-                <div style={{ fontSize: 11, color: C.hint }}>Emotional ambience mix</div>
-              </div>
-              <button
-                onClick={toggleMusic}
-                style={{
-                  width: 30, height: 30, borderRadius: "50%",
-                  background: "rgba(255,255,255,0.06)", border: `1px solid ${C.border}`,
-                  color: C.muted, cursor: "pointer",
-                  display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
-                }}
-              >
-                <Icon d={isPlaying ? ICONS.pause : ICONS.play} size={12} />
-              </button>
-            </Card>
 
             {/* Daily thought */}
             <div style={{
