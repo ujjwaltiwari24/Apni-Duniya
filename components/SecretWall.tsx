@@ -2,6 +2,8 @@
 
 import {
   useEffect,
+  useMemo,
+  useRef,
   useState,
 } from "react";
 
@@ -19,6 +21,71 @@ import {
   db,
 } from "@/firebase/config";
 
+/* ════════════════════════════════
+   RANDOM ANON NAMES
+════════════════════════════════ */
+
+const names = [
+
+  "Silent Soul",
+  "Midnight Human",
+  "Rain Walker",
+  "Lost Dreamer",
+  "Lonely Bird",
+  "Cloud Person",
+  "Night Owl",
+  "Wandering Mind",
+  "Calm Stranger",
+  "Coffee Soul",
+  "Moon Listener",
+  "Quiet Human",
+  "Fading Thought",
+  "Soft Echo",
+  "Drifting Soul",
+
+];
+
+const emojis = [
+  "🌙",
+  "☕",
+  "🌧️",
+  "✨",
+  "🕯️",
+  "🍂",
+  "🎧",
+  "🌌",
+  "💭",
+];
+
+function randomItem(arr: string[]) {
+
+  return arr[
+    Math.floor(
+      Math.random() *
+      arr.length
+    )
+  ];
+
+}
+
+function formatTime(ms: number) {
+
+  const diff =
+    Date.now() - ms;
+
+  const sec =
+    Math.floor(diff / 1000);
+
+  if (sec < 60)
+    return `${sec}s ago`;
+
+  const min =
+    Math.floor(sec / 60);
+
+  return `${min}m ago`;
+
+}
+
 export default function SecretWall() {
 
   const [message, setMessage] =
@@ -27,18 +94,47 @@ export default function SecretWall() {
   const [messages, setMessages] =
     useState<any[]>([]);
 
-  // FETCH MESSAGES
+  const [sending, setSending] =
+    useState(false);
+
+  const bottomRef =
+    useRef<HTMLDivElement | null>(
+      null
+    );
+
+  const randomIdentity =
+  useMemo(() => {
+
+    return {
+
+      name:
+        `${randomItem(names)} #${Math.floor(
+          1000 +
+          Math.random() * 9000
+        )}`,
+
+      emoji:
+        randomItem(emojis),
+
+    };
+
+  }, []);
+
+  /* ════════════════════════════════
+     FETCH LIVE MESSAGES
+  ════════════════════════════════ */
+
   useEffect(() => {
 
     const q =
       query(
         collection(
           db,
-          "secretWall"
+          "anonymousChat"
         ),
         orderBy(
           "createdAt",
-          "desc"
+          "asc"
         )
       );
 
@@ -65,30 +161,39 @@ export default function SecretWall() {
           data.forEach(
             async (msg: any) => {
 
-              const now =
-                Date.now();
-
               const age =
-                now -
+                Date.now() -
                 msg.createdAt;
 
               if (
-                age >
-                60000
+                age > 86400000
               ) {
 
-                await deleteDoc(
-                  doc(
-                    db,
-                    "secretWall",
-                    msg.id
-                  )
-                );
+                try {
+
+                  await deleteDoc(
+                    doc(
+                      db,
+                      "anonymousChat",
+                      msg.id
+                    )
+                  );
+
+                } catch (_) {}
 
               }
 
             }
           );
+
+          setTimeout(() => {
+
+            bottomRef.current?.scrollIntoView({
+              behavior:
+                "smooth",
+            });
+
+          }, 100);
 
         }
       );
@@ -97,7 +202,10 @@ export default function SecretWall() {
 
   }, []);
 
-  // SEND MESSAGE
+  /* ════════════════════════════════
+     SEND MESSAGE
+  ════════════════════════════════ */
+
   const sendMessage =
     async () => {
 
@@ -106,23 +214,62 @@ export default function SecretWall() {
       )
         return;
 
-      await addDoc(
-        collection(
-          db,
-          "secretWall"
-        ),
-        {
+      try {
 
-          text:
-            message,
+        setSending(true);
 
-          createdAt:
-            Date.now(),
+        await addDoc(
+          collection(
+            db,
+            "anonymousChat"
+          ),
+          {
 
-        }
-      );
+            text:
+              message.trim(),
 
-      setMessage("");
+            createdAt:
+              Date.now(),
+
+            name:
+              randomIdentity.name,
+
+            emoji:
+              randomIdentity.emoji,
+
+          }
+        );
+
+        setMessage("");
+
+      } catch (err) {
+
+        console.log(err);
+
+      } finally {
+
+        setSending(false);
+
+      }
+
+    };
+
+  /* ════════════════════════════════
+     ENTER KEY SEND
+  ════════════════════════════════ */
+
+  const handleKeyDown =
+    (
+      e: React.KeyboardEvent<HTMLInputElement>
+    ) => {
+
+      if (
+        e.key === "Enter"
+      ) {
+
+        sendMessage();
+
+      }
 
     };
 
@@ -132,64 +279,330 @@ export default function SecretWall() {
 
         width: "100%",
 
-        marginTop: 28,
-
-        padding: 20,
+        padding: 18,
 
         borderRadius: 24,
 
         background:
-          "rgba(255,255,255,0.04)",
+          "rgba(10,10,12,0.82)",
 
         border:
-          "1px solid rgba(255,255,255,0.08)",
+          "1px solid rgba(255,255,255,0.06)",
 
         backdropFilter:
-          "blur(20px)",
+          "blur(22px)",
+
+        WebkitBackdropFilter:
+          "blur(22px)",
+
+        boxShadow:
+          "0 10px 50px rgba(0,0,0,0.28)",
+
+        overflow:
+          "hidden",
 
       }}
     >
 
-      {/* TITLE */}
-      <h2
+      {/* HEADER */}
+      <div
         style={{
 
-          margin: 0,
+          display: "flex",
 
-          marginBottom: 8,
+          alignItems:
+            "center",
 
-          fontSize: 24,
+          justifyContent:
+            "space-between",
 
-          fontWeight: 700,
+          marginBottom: 16,
 
         }}
       >
 
-        🌙 Secret Wall
+        <div>
 
-      </h2>
+          <h2
+            style={{
 
-      <p
+              margin: 0,
+
+              fontSize: 20,
+
+              fontWeight: 700,
+
+              color:
+                "rgba(255,255,255,0.95)",
+
+            }}
+          >
+
+            🌙 Anonymous Chat
+
+          </h2>
+
+          <p
+            style={{
+
+              marginTop: 6,
+
+              color:
+                "rgba(255,255,255,0.55)",
+
+              fontSize: 12,
+
+              lineHeight:
+                1.6,
+
+            }}
+          >
+
+            Virtual space for sharing thoughts anonymously.
+            Messages disappear after 24 hours.
+
+          </p>
+
+        </div>
+
+        <div
+          style={{
+
+            display: "flex",
+
+            alignItems:
+              "center",
+
+            gap: 6,
+
+            color:
+              "#59d87b",
+
+            fontSize: 11,
+
+          }}
+        >
+
+          <div
+            style={{
+
+              width: 7,
+
+              height: 7,
+
+              borderRadius:
+                "50%",
+
+              background:
+                "#59d87b",
+
+            }}
+          />
+
+          LIVE
+
+        </div>
+
+      </div>
+
+      {/* CHAT AREA */}
+      <div
         style={{
 
-          marginTop: 0,
+          display: "flex",
 
-          marginBottom: 18,
+          flexDirection:
+            "column",
 
-          color:
-            "rgba(255,255,255,0.65)",
+          gap: 12,
 
-          lineHeight: 1.6,
+          maxHeight: 320,
 
-          fontSize: 14,
+          overflowY:
+            "auto",
+
+          paddingRight: 4,
+
+          marginBottom: 16,
 
         }}
       >
 
-        Leave anonymous thoughts.
-        Messages disappear after 1 minute.
+        {
+          messages.length === 0 && (
 
-      </p>
+            <div
+              style={{
+
+                padding: 18,
+
+                borderRadius:
+                  18,
+
+                background:
+                  "rgba(255,255,255,0.03)",
+
+                border:
+                  "1px dashed rgba(255,255,255,0.08)",
+
+                color:
+                  "rgba(255,255,255,0.45)",
+
+                fontSize: 13,
+
+                lineHeight:
+                  1.7,
+
+              }}
+            >
+
+              No messages yet.
+              Start the vibe ✨
+
+            </div>
+
+          )
+        }
+
+        {
+          messages.map(
+            (msg) => (
+
+              <div
+                key={msg.id}
+                style={{
+
+                  padding: 14,
+
+                  borderRadius:
+                    18,
+
+                  background:
+                    "rgba(255,255,255,0.045)",
+
+                  border:
+                    "1px solid rgba(255,255,255,0.05)",
+
+                }}
+              >
+
+                {/* TOP */}
+                <div
+                  style={{
+
+                    display: "flex",
+
+                    alignItems:
+                      "center",
+
+                    justifyContent:
+                      "space-between",
+
+                    marginBottom: 10,
+
+                  }}
+                >
+
+                  <div
+                    style={{
+
+                      display: "flex",
+
+                      alignItems:
+                        "center",
+
+                      gap: 8,
+
+                    }}
+                  >
+
+                    <div
+                      style={{
+                        fontSize: 18,
+                      }}
+                    >
+
+                      {
+                        msg.emoji
+                      }
+
+                    </div>
+
+                    <div
+                      style={{
+
+                        fontSize: 13,
+
+                        fontWeight: 600,
+
+                        color:
+                          "rgba(255,255,255,0.88)",
+
+                      }}
+                    >
+
+                      {
+                        msg.name
+                      }
+
+                    </div>
+
+                  </div>
+
+                  <div
+                    style={{
+
+                      fontSize: 11,
+
+                      color:
+                        "rgba(255,255,255,0.35)",
+
+                    }}
+                  >
+
+                    {
+                      formatTime(
+                        msg.createdAt
+                      )
+                    }
+
+                  </div>
+
+                </div>
+
+                {/* MESSAGE */}
+                <div
+                  style={{
+
+                    color:
+                      "rgba(255,255,255,0.82)",
+
+                    fontSize: 14,
+
+                    lineHeight:
+                      1.8,
+
+                    wordBreak:
+                      "break-word",
+
+                  }}
+                >
+
+                  {
+                    msg.text
+                  }
+
+                </div>
+
+              </div>
+
+            )
+          )
+        }
+
+        <div ref={bottomRef} />
+
+      </div>
 
       {/* INPUT */}
       <div
@@ -197,9 +610,7 @@ export default function SecretWall() {
 
           display: "flex",
 
-          gap: 12,
-
-          marginBottom: 22,
+          gap: 10,
 
         }}
       >
@@ -211,7 +622,11 @@ export default function SecretWall() {
               e.target.value
             )
           }
-          placeholder="Write something..."
+          onKeyDown={
+            handleKeyDown
+          }
+          maxLength={180}
+          placeholder="Share a thought..."
           style={{
 
             flex: 1,
@@ -223,7 +638,7 @@ export default function SecretWall() {
               16,
 
             border:
-              "1px solid rgba(255,255,255,0.08)",
+              "1px solid rgba(255,255,255,0.06)",
 
             background:
               "rgba(255,255,255,0.05)",
@@ -241,6 +656,9 @@ export default function SecretWall() {
           onClick={
             sendMessage
           }
+          disabled={
+            sending
+          }
           style={{
 
             padding:
@@ -250,85 +668,40 @@ export default function SecretWall() {
               16,
 
             border:
-              "none",
+              "1px solid rgba(255,220,140,0.12)",
 
             background:
-              "white",
+              sending
 
-            color: "black",
+                ? "rgba(255,255,255,0.08)"
+
+                : "linear-gradient(135deg,#b8863b,#e0b15f)",
+
+            color:
+              sending
+                ? "rgba(255,255,255,0.5)"
+                : "#120c03",
 
             fontWeight: 700,
 
             cursor:
-              "pointer",
+              sending
+                ? "not-allowed"
+                : "pointer",
+
+            transition:
+              "all 0.2s ease",
 
           }}
         >
 
-          Send
+          {
+            sending
+              ? "..."
+              : "Send"
+          }
 
         </button>
-
-      </div>
-
-      {/* MESSAGES */}
-      <div
-        style={{
-
-          display: "flex",
-
-          flexDirection:
-            "column",
-
-          gap: 12,
-
-          maxHeight: 340,
-
-          overflowY:
-            "auto",
-
-        }}
-      >
-
-        {
-          messages.map(
-            (msg) => (
-
-              <div
-                key={msg.id}
-                style={{
-
-                  padding: 16,
-
-                  borderRadius:
-                    18,
-
-                  background:
-                    "rgba(255,255,255,0.05)",
-
-                  border:
-                    "1px solid rgba(255,255,255,0.05)",
-
-                  color:
-                    "rgba(255,255,255,0.9)",
-
-                  lineHeight:
-                    1.6,
-
-                  fontSize: 14,
-
-                }}
-              >
-
-                {
-                  msg.text
-                }
-
-              </div>
-
-            )
-          )
-        }
 
       </div>
 
